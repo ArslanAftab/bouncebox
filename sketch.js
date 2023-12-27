@@ -2,6 +2,7 @@ let balls = [];
 let bounceSound;
 let gravitySlider;
 let resetButton;
+let obstacles = [];
 
 function setup() {
     createCanvas(800, 600);
@@ -10,6 +11,7 @@ function setup() {
     gravitySlider = createSlider(0, 0.5, 0.3, 0.01);
     gravitySlider.position(10, 10);
     gravitySlider.style('width', '80px');
+
     let gravityLabel = createP('Gravity');
     gravityLabel.position(10, 10);
 
@@ -17,6 +19,10 @@ function setup() {
     resetButton.position(10, 60);
     resetButton.mousePressed(resetSketch);
 
+    // Add a few initial obstacles
+    obstacles.push(new Obstacle(100, 200, 100, 20));
+    obstacles.push(new Obstacle(300, 400, 150, 20));
+    // More obstacles can be added as needed
 }
 
 function resetSketch() {
@@ -46,7 +52,6 @@ function checkCollisions() {
                 balls[j].x += overlap * nx;
                 balls[j].y += overlap * ny;
 
-                // Exchange speeds
                 [balls[i].xSpeed, balls[j].xSpeed] = [balls[j].xSpeed, balls[i].xSpeed];
                 [balls[i].ySpeed, balls[j].ySpeed] = [balls[j].ySpeed, balls[i].ySpeed];
             }
@@ -57,37 +62,36 @@ function checkCollisions() {
 function draw() {
     background(220);
 
-    // Display FPS in the top right corner
     let fps = frameRate();
     fill(0);
     stroke(0);
     textAlign(RIGHT);
     text("FPS: " + fps.toFixed(2), width - 10, 20);
 
-    // Display ball count
     textAlign(LEFT);
     text("Balls: " + balls.length, 10, 20);
     
     for (let i = 0; i < balls.length; i++) {
-        let ball = balls[i];
-        ball.applyGravity();
-        ball.move();
-        ball.display();
+        balls[i].applyGravity();
+        balls[i].move();
+        balls[i].display();
     }
+
+    for (let obstacle of obstacles) {
+        obstacle.display();
+    }
+
     checkCollisions();
 }
 
 function mousePressed() {
-    // Add a ball only when the mouse is within the canvas
-    if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+    if (mouseButton === LEFT && mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
         if (balls.length < 10) {
             let newBall = new Ball(mouseX, mouseY);
             balls.push(newBall);
         }
     }
 }
-
-
 class Ball {
     constructor(x, y) {
         this.x = x;
@@ -96,7 +100,6 @@ class Ball {
         this.xSpeed = random(-2, 2);
         this.ySpeed = 0;
         this.damping = 0.90;
-        this.gravity = 0.1;
         this.color = color(random(255), random(255), random(255)); 
     }
 
@@ -108,12 +111,10 @@ class Ball {
         this.x += this.xSpeed;
         this.y += this.ySpeed;
 
-        // Bounce off left and right edges
         if (this.x > width - this.radius || this.x < this.radius) {
             this.xSpeed *= -1;
         }
 
-        // Bounce off the bottom edge
         if (this.y > height - this.radius) {
             this.y = height - this.radius;
             this.ySpeed *= -this.damping;
@@ -122,15 +123,38 @@ class Ball {
             }
         }
 
-        // Bounce off the top edge
         if (this.y < this.radius) {
             this.y = this.radius;
             this.ySpeed *= -this.damping;
         }
+
+        for (let obstacle of obstacles) {
+            if (this.x > obstacle.x - this.radius &&
+                this.x < obstacle.x + obstacle.width + this.radius &&
+                this.y > obstacle.y - this.radius &&
+                this.y < obstacle.y + obstacle.height + this.radius) {
+
+                this.ySpeed *= -1;
+            }
+        }
     }
 
     display() {
-        fill(this.color); // Use the random color
+        fill(this.color);
         ellipse(this.x, this.y, this.radius * 2, this.radius * 2);
+    }
+}
+
+class Obstacle {
+    constructor(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    }
+
+    display() {
+        fill(150);
+        rect(this.x, this.y, this.width, this.height);
     }
 }
