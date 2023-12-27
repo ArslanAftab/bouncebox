@@ -1,17 +1,26 @@
 let balls = [];
 let bounceSound;
 let gravitySlider;
+let resetButton;
 
 function setup() {
     createCanvas(800, 600);
     frameRate(60);
-    
-    gravitySlider = createSlider(0, 0.5, 0.1, 0.01);
+
+    gravitySlider = createSlider(0, 0.5, 0.3, 0.01);
     gravitySlider.position(10, 10);
     gravitySlider.style('width', '80px');
-    
     let gravityLabel = createP('Gravity');
     gravityLabel.position(10, 10);
+
+    resetButton = createButton('Reset');
+    resetButton.position(10, 60);
+    resetButton.mousePressed(resetSketch);
+
+}
+
+function resetSketch() {
+    balls = []; // Clear the balls array
 }
 
 function preload() {
@@ -69,11 +78,15 @@ function draw() {
 }
 
 function mousePressed() {
-    if (balls.length < 10) { // Limit the number of balls
-        let newBall = new Ball(mouseX, mouseY);
-        balls.push(newBall);
+    // Add a ball only when the mouse is within the canvas
+    if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+        if (balls.length < 10) {
+            let newBall = new Ball(mouseX, mouseY);
+            balls.push(newBall);
+        }
     }
 }
+
 
 class Ball {
     constructor(x, y) {
